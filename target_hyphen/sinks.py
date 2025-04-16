@@ -27,7 +27,7 @@ class PaymentsSink(HyphenSink):
                 raise Exception(f"Failed to create batch: {response.text}")
 
         return {
-            "externalId": record.pop("externalId", None),
+            "id": record.pop("id", None),
             "applicationId": self.config.get("app_id"),
             "partyId": self.config.get("party_id"),
             "batchId": batch.get("batchId"),
@@ -36,7 +36,7 @@ class PaymentsSink(HyphenSink):
 
     def upsert_record(self, record: dict, context: dict):
         state_updates = {}
-        externalId = record.pop("externalId", None)
+        id = record.pop("id", None)
 
         try:
             # Create the payment
@@ -46,10 +46,10 @@ class PaymentsSink(HyphenSink):
 
             if response.ok:
                 self.logger.info(f"Successfully posted payment")
-                return externalId, True, state_updates
+                return id, True, state_updates
             else:
                 self.logger.error(f"Failed to post payment: {response.text}")
-                return externalId, False, {"error": f"{response.status_code} - {response.text}"}
+                return id, False, {"error": f"{response.status_code} - {response.text}"}
         except Exception as e:
             self.logger.error(f"Failed to post payment: {str(e)}")
-            return externalId, False, {"error": str(e)}
+            return id, False, {"error": str(e)}
